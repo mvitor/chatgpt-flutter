@@ -167,7 +167,7 @@ class _CompleteFormState extends State<CompleteForm> {
   bool _ageHasError = false;
   bool _genderHasError = false;
 
-  var genderOptions = ['Male', 'Female', 'Other'];
+  var genderOptions = ['Menino', 'Menina', 'Outro'];
 
   void _onChanged(dynamic val) => debugPrint(val.toString());
 
@@ -192,50 +192,13 @@ class _CompleteFormState extends State<CompleteForm> {
                   'movie_rating': 5,
                   'best_language': 'Dart',
                   'age': '13',
-                  'gender': 'Male',
+                  'gender': 'Menino',
                   'languages_filter': ['Dart']
                 },
                 skipDisabled: true,
                 child: Column(
                   children: <Widget>[
                     const SizedBox(height: 15),
-                    FormBuilderDateTimePicker(
-                      name: 'date',
-                      initialEntryMode: DatePickerEntryMode.calendar,
-                      initialValue: DateTime.now(),
-                      inputType: InputType.both,
-                      decoration: InputDecoration(
-                        labelText: 'Appointment Time',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _formKey.currentState!.fields['date']
-                                ?.didChange(null);
-                          },
-                        ),
-                      ),
-                      initialTime: const TimeOfDay(hour: 8, minute: 0),
-                      // locale: const Locale.fromSubtags(languageCode: 'fr'),
-                    ),
-                    FormBuilderDateRangePicker(
-                      name: 'date_range',
-                      firstDate: DateTime(1970),
-                      lastDate: DateTime(2030),
-                      format: DateFormat('yyyy-MM-dd'),
-                      onChanged: _onChanged,
-                      decoration: InputDecoration(
-                        labelText: 'Date Range',
-                        helperText: 'Helper text',
-                        hintText: 'Hint text',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _formKey.currentState!.fields['date_range']
-                                ?.didChange(null);
-                          },
-                        ),
-                      ),
-                    ),
                     FormBuilderSlider(
                       name: 'slider',
                       validator: FormBuilderValidators.compose([
@@ -249,59 +212,7 @@ class _CompleteFormState extends State<CompleteForm> {
                       activeColor: Colors.red,
                       inactiveColor: Colors.pink[100],
                       decoration: const InputDecoration(
-                        labelText: 'Number of things',
-                      ),
-                    ),
-                    FormBuilderRangeSlider(
-                      name: 'range_slider',
-                      onChanged: _onChanged,
-                      min: 0.0,
-                      max: 100.0,
-                      initialValue: const RangeValues(4, 7),
-                      divisions: 20,
-                    // maxValueWidget: (max) => TextButton(
-                    //     onPressed: () {
-                    //       _formKey.currentState?.patchValue(
-                    //         {'range_slider': const RangeValues(4, 100)},
-                    //       );
-                    //     },
-                    //     child: Text(max),
-                    //   ),
-                      activeColor: Colors.red,
-                      inactiveColor: Colors.pink[100],
-                      decoration:
-                          const InputDecoration(labelText: 'Price Range'),
-                    ),
-                    FormBuilderCheckbox(
-                      name: 'accept_terms',
-                      initialValue: false,
-                      onChanged: _onChanged,
-                      title: RichText(
-                        text: const TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'I have read and agree to the ',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            TextSpan(
-                              text: 'Terms and Conditions',
-                              style: TextStyle(color: Colors.blue),
-                              // Flutter doesn't allow a button inside a button
-                              // https://github.com/flutter/flutter/issues/31437#issuecomment-492411086
-                              /*
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  print('launch url');
-                                },
-                              */
-                            ),
-                          ],
-                        ),
-                      ),
-                      validator: FormBuilderValidators.equal(
-                        true,
-                        errorText:
-                            'You must accept terms and conditions to continue',
+                        labelText: 'Duração da história',
                       ),
                     ),
                     FormBuilderTextField(
@@ -333,11 +244,11 @@ class _CompleteFormState extends State<CompleteForm> {
                     FormBuilderDropdown<String>(
                       name: 'gender',
                       decoration: InputDecoration(
-                        labelText: 'Gender',
+                        labelText: 'Gênero',
                         suffix: _genderHasError
                             ? const Icon(Icons.error)
                             : const Icon(Icons.check),
-                        hintText: 'Select Gender',
+                        hintText: 'Selecionar Gênero',
                       ),
                       validator: FormBuilderValidators.compose(
                           [FormBuilderValidators.required()]),
@@ -358,33 +269,15 @@ class _CompleteFormState extends State<CompleteForm> {
                       },
                       valueTransformer: (val) => val?.toString(),
                     ),
-                    FormBuilderRadioGroup<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'My chosen language',
-                      ),
-                      initialValue: null,
-                      name: 'best_language',
-                      onChanged: _onChanged,
-                      validator: FormBuilderValidators.compose(
-                          [FormBuilderValidators.required()]),
-                      options:
-                          ['Dart', 'Kotlin', 'Java', 'Swift', 'Objective-C']
-                              .map((lang) => FormBuilderFieldOption(
-                                    value: lang,
-                                    child: Text(lang),
-                                  ))
-                              .toList(growable: false),
-                      controlAffinity: ControlAffinity.trailing,
-                    ),
                     FormBuilderSegmentedControl(
                       decoration: const InputDecoration(
-                        labelText: 'Movie Rating (Archer)',
+                        labelText: 'Gênero',
                       ),
                       name: 'movie_rating',
                       // initialValue: 1,
                       // textStyle: TextStyle(fontWeight: FontWeight.bold),
-                      options: List.generate(5, (i) => i + 1)
-                          .map((number) => FormBuilderFieldOption(
+                      //options: List.generate(5, (i) => i + 1)
+                      options: ['Comédia', 'Calmo', 'Aventura', 'Swift', 'Terror'].map((number) => FormBuilderFieldOption(
                                 value: number,
                                 child: Text(
                                   number.toString(),
@@ -428,35 +321,35 @@ class _CompleteFormState extends State<CompleteForm> {
                     FormBuilderFilterChip<String>(
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       decoration: const InputDecoration(
-                          labelText: 'The language of my people'),
+                          labelText: 'Personagens'),
                       name: 'languages_filter',
-                      selectedColor: Colors.red,
+                      selectedColor: Color.fromARGB(255, 91, 110, 194),
                       options: const [
                         FormBuilderChipOption(
-                          value: 'Dart',
-                          avatar: CircleAvatar(child: Text('D')),
+                          value: 'Homem Aranha',
+                          avatar: CircleAvatar(child: Text('HA')),
                         ),
                         FormBuilderChipOption(
-                          value: 'Kotlin',
-                          avatar: CircleAvatar(child: Text('K')),
+                          value: 'Hulk',
+                          avatar: CircleAvatar(child: Text('HU')),
                         ),
                         FormBuilderChipOption(
-                          value: 'Java',
-                          avatar: CircleAvatar(child: Text('J')),
+                          value: 'Homem de Ferro',
+                          avatar: CircleAvatar(child: Text('HF')),
                         ),
                         FormBuilderChipOption(
-                          value: 'Swift',
-                          avatar: CircleAvatar(child: Text('S')),
+                          value: 'Capitão América',
+                          avatar: CircleAvatar(child: Text('CA')),
                         ),
                         FormBuilderChipOption(
-                          value: 'Objective-C',
-                          avatar: CircleAvatar(child: Text('O')),
+                          value: 'Pantera Negra',
+                          avatar: CircleAvatar(child: Text('PN')),
                         ),
                       ],
                       onChanged: _onChanged,
                       validator: FormBuilderValidators.compose([
                         FormBuilderValidators.minLength(1),
-                        FormBuilderValidators.maxLength(3),
+                        FormBuilderValidators.maxLength(4),
                       ]),
                     ),
                     FormBuilderChoiceChip<String>(
