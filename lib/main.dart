@@ -16,13 +16,18 @@ import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 
 
 final Logger _logger = Logger('MyApp');
 
 
 void main() async {
-  
+ await Firebase.initializeApp(
+     options: DefaultFirebaseOptions.currentPlatform,
+ ); 
   //carregar variáveis ​​de ambiente
   await dotenv.load(fileName: ".env");
 
@@ -166,15 +171,27 @@ class _CompleteFormState extends State<CompleteForm> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _ageHasError = false;
   bool _genderHasError = false;
-
-  var genderOptions = ['Male', 'Female', 'Other'];
+  Map<String, dynamic> _formData = {};
+  var genderOptions = ['Menino', 'Menina', 'Outro'];
 
   void _onChanged(dynamic val) => debugPrint(val.toString());
+
+  void _submitForm() {
+
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      final formData = _formKey.currentState!.value;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MyWidget(formData: _formData)),
+      );
+    }
+  }  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Form Builder Example')),
+      appBar: AppBar(title: const Text('Crie sua histórinha')),
       body: Padding(
         padding: const EdgeInsets.all(10),
         child: SingleChildScrollView(
@@ -189,126 +206,53 @@ class _CompleteFormState extends State<CompleteForm> {
                 },
                 autovalidateMode: AutovalidateMode.disabled,
                 initialValue: const {
-                  'movie_rating': 5,
+                  'movie_rating': 'Calmo',
                   'best_language': 'Dart',
                   'age': '13',
-                  'gender': 'Male',
-                  'languages_filter': ['Dart']
+                  'gender': 'Menino',
+                  'languages_filter': ['Homem Aranha']
                 },
                 skipDisabled: true,
                 child: Column(
                   children: <Widget>[
                     const SizedBox(height: 15),
-                    FormBuilderDateTimePicker(
-                      name: 'date',
-                      initialEntryMode: DatePickerEntryMode.calendar,
-                      initialValue: DateTime.now(),
-                      inputType: InputType.both,
+                    FormBuilderDropdown<String>(
+                      name: 'gender',
                       decoration: InputDecoration(
-                        labelText: 'Appointment Time',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _formKey.currentState!.fields['date']
-                                ?.didChange(null);
-                          },
-                        ),
+                        labelText: 'Genero',
+                        suffix: _genderHasError
+                            ? const Icon(Icons.error)
+                            : const Icon(Icons.check),
+                        hintText: 'Selecione Genero',
                       ),
-                      initialTime: const TimeOfDay(hour: 8, minute: 0),
-                      // locale: const Locale.fromSubtags(languageCode: 'fr'),
-                    ),
-                    FormBuilderDateRangePicker(
-                      name: 'date_range',
-                      firstDate: DateTime(1970),
-                      lastDate: DateTime(2030),
-                      format: DateFormat('yyyy-MM-dd'),
-                      onChanged: _onChanged,
-                      decoration: InputDecoration(
-                        labelText: 'Date Range',
-                        helperText: 'Helper text',
-                        hintText: 'Hint text',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _formKey.currentState!.fields['date_range']
-                                ?.didChange(null);
-                          },
-                        ),
-                      ),
-                    ),
-                    FormBuilderSlider(
-                      name: 'slider',
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.min(6),
-                      ]),
-                      onChanged: _onChanged,
-                      min: 0.0,
-                      max: 10.0,
-                      initialValue: 7.0,
-                      divisions: 20,
-                      activeColor: Colors.red,
-                      inactiveColor: Colors.pink[100],
-                      decoration: const InputDecoration(
-                        labelText: 'Number of things',
-                      ),
-                    ),
-                    FormBuilderRangeSlider(
-                      name: 'range_slider',
-                      onChanged: _onChanged,
-                      min: 0.0,
-                      max: 100.0,
-                      initialValue: const RangeValues(4, 7),
-                      divisions: 20,
-                    // maxValueWidget: (max) => TextButton(
-                    //     onPressed: () {
-                    //       _formKey.currentState?.patchValue(
-                    //         {'range_slider': const RangeValues(4, 100)},
-                    //       );
-                    //     },
-                    //     child: Text(max),
-                    //   ),
-                      activeColor: Colors.red,
-                      inactiveColor: Colors.pink[100],
-                      decoration:
-                          const InputDecoration(labelText: 'Price Range'),
-                    ),
-                    FormBuilderCheckbox(
-                      name: 'accept_terms',
-                      initialValue: false,
-                      onChanged: _onChanged,
-                      title: RichText(
-                        text: const TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'I have read and agree to the ',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            TextSpan(
-                              text: 'Terms and Conditions',
-                              style: TextStyle(color: Colors.blue),
-                              // Flutter doesn't allow a button inside a button
-                              // https://github.com/flutter/flutter/issues/31437#issuecomment-492411086
-                              /*
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  print('launch url');
-                                },
-                              */
-                            ),
-                          ],
-                        ),
-                      ),
-                      validator: FormBuilderValidators.equal(
-                        true,
-                        errorText:
-                            'You must accept terms and conditions to continue',
-                      ),
-                    ),
+                      validator: FormBuilderValidators.compose(
+                          [FormBuilderValidators.required()]),
+                      items: genderOptions
+                          .map((gender) => DropdownMenuItem(
+                                alignment: AlignmentDirectional.center,
+                                value: gender,
+                                child: Text(gender),
+                              ))
+                          .toList(),
+                      onSaved: (value) {
+                  _formData['gender'] = value;
+                },
+                      onChanged: (val) {
+                        setState(() {
+                          _genderHasError = !(_formKey
+                                  .currentState?.fields['gender']
+                                  ?.validate() ??
+                              false);
+                        });
+                      },
+                      valueTransformer: (val) => val?.toString(),
+                    ),                    
+
                     FormBuilderTextField(
                       autovalidateMode: AutovalidateMode.always,
                       name: 'age',
                       decoration: InputDecoration(
-                        labelText: 'Age',
+                        labelText: 'Idade',
                         suffixIcon: _ageHasError
                             ? const Icon(Icons.error, color: Colors.red)
                             : const Icon(Icons.check, color: Colors.green),
@@ -320,71 +264,66 @@ class _CompleteFormState extends State<CompleteForm> {
                               false);
                         });
                       },
+onSaved: (value) {
+                  _formData['age'] = value;
+                },                      
                       // valueTransformer: (text) => num.tryParse(text),
                       validator: FormBuilderValidators.compose([
                         FormBuilderValidators.required(),
                         FormBuilderValidators.numeric(),
                         FormBuilderValidators.max(70),
                       ]),
-                      // initialValue: '12',
+                      initialValue: '4',
                       keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.next,
                     ),
-                    FormBuilderDropdown<String>(
-                      name: 'gender',
-                      decoration: InputDecoration(
-                        labelText: 'Gender',
-                        suffix: _genderHasError
-                            ? const Icon(Icons.error)
-                            : const Icon(Icons.check),
-                        hintText: 'Select Gender',
-                      ),
-                      validator: FormBuilderValidators.compose(
-                          [FormBuilderValidators.required()]),
-                      items: genderOptions
-                          .map((gender) => DropdownMenuItem(
-                                alignment: AlignmentDirectional.center,
-                                value: gender,
-                                child: Text(gender),
-                              ))
-                          .toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _genderHasError = !(_formKey
-                                  .currentState?.fields['gender']
-                                  ?.validate() ??
-                              false);
-                        });
-                      },
-                      valueTransformer: (val) => val?.toString(),
-                    ),
-                    FormBuilderRadioGroup<String>(
+
+                    FormBuilderFilterChip<String>(
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       decoration: const InputDecoration(
-                        labelText: 'My chosen language',
-                      ),
-                      initialValue: null,
-                      name: 'best_language',
+                          labelText: 'Personagens'),
+                      name: 'languages_filter',
+                      selectedColor: Color.fromARGB(255, 91, 110, 194),
+                      options: const [
+                        FormBuilderChipOption(
+                          value: 'Homem Aranha',
+                          avatar: CircleAvatar(child: Text('HA')),
+                        ),
+                        FormBuilderChipOption(
+                          value: 'Hulk',
+                          avatar: CircleAvatar(child: Text('HU')),
+                        ),
+                        FormBuilderChipOption(
+                          value: 'Homem de Ferro',
+                          avatar: CircleAvatar(child: Text('HF')),
+                        ),
+                        FormBuilderChipOption(
+                          value: 'Capitão América',
+                          avatar: CircleAvatar(child: Text('CA')),
+                        ),
+                        FormBuilderChipOption(
+                          value: 'Pantera Negra',
+                          avatar: CircleAvatar(child: Text('PN')),
+                        ),
+                      ],
+                      onSaved: (value) {
+                  _formData['character'] = value;
+                },
                       onChanged: _onChanged,
-                      validator: FormBuilderValidators.compose(
-                          [FormBuilderValidators.required()]),
-                      options:
-                          ['Dart', 'Kotlin', 'Java', 'Swift', 'Objective-C']
-                              .map((lang) => FormBuilderFieldOption(
-                                    value: lang,
-                                    child: Text(lang),
-                                  ))
-                              .toList(growable: false),
-                      controlAffinity: ControlAffinity.trailing,
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.minLength(1),
+                        FormBuilderValidators.maxLength(4),
+                      ]),
                     ),
                     FormBuilderSegmentedControl(
                       decoration: const InputDecoration(
-                        labelText: 'Movie Rating (Archer)',
+                        labelText: 'Gênero',
                       ),
                       name: 'movie_rating',
                       // initialValue: 1,
                       // textStyle: TextStyle(fontWeight: FontWeight.bold),
-                      options: List.generate(5, (i) => i + 1)
-                          .map((number) => FormBuilderFieldOption(
+                      //options: List.generate(5, (i) => i + 1)
+                      options: ['Calmo','Comédia','Aventura', 'Terror'].map((number) => FormBuilderFieldOption(
                                 value: number,
                                 child: Text(
                                   number.toString(),
@@ -393,121 +332,63 @@ class _CompleteFormState extends State<CompleteForm> {
                                 ),
                               ))
                           .toList(),
-                      onChanged: _onChanged,
+                      onSaved: (value) {
+                        _formData['movie_rating'] = value;
+                      },
+                    //  onChanged: _onChanged,
                     ),
-                    FormBuilderSwitch(
-                      title: const Text('I Accept the terms and conditions'),
-                      name: 'accept_terms_switch',
-                      initialValue: true,
+                    FormBuilderSlider(
+                      name: 'slider',
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.min(6),
+                      ]),
+                      onSaved: (value) {
+                  _formData['duration'] = value;
+                },
                       onChanged: _onChanged,
-                    ),
-                    FormBuilderCheckboxGroup<String>(
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      min: 0.0,
+                      max: 10.0,
+                      initialValue: 7.0,
+                      divisions: 20,
+                      activeColor: Color.fromARGB(255, 66, 23, 221),
+                      inactiveColor: Color.fromARGB(255, 141, 120, 245),
                       decoration: const InputDecoration(
-                          labelText: 'The language of my people'),
-                      name: 'languages',
-                      // initialValue: const ['Dart'],
-                      options: const [
-                        FormBuilderFieldOption(value: 'Dart'),
-                        FormBuilderFieldOption(value: 'Kotlin'),
-                        FormBuilderFieldOption(value: 'Java'),
-                        FormBuilderFieldOption(value: 'Swift'),
-                        FormBuilderFieldOption(value: 'Objective-C'),
-                      ],
-                      onChanged: _onChanged,
-                      separator: const VerticalDivider(
-                        width: 10,
-                        thickness: 5,
-                        color: Colors.red,
+                        labelText: 'Duração da história',
                       ),
+                    ), 
+                    FormBuilderSlider(
+                      name: 'slider',
                       validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.minLength(1),
-                        FormBuilderValidators.maxLength(3),
+                        FormBuilderValidators.min(6),
                       ]),
-                    ),
-                    FormBuilderFilterChip<String>(
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      decoration: const InputDecoration(
-                          labelText: 'The language of my people'),
-                      name: 'languages_filter',
-                      selectedColor: Colors.red,
-                      options: const [
-                        FormBuilderChipOption(
-                          value: 'Dart',
-                          avatar: CircleAvatar(child: Text('D')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Kotlin',
-                          avatar: CircleAvatar(child: Text('K')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Java',
-                          avatar: CircleAvatar(child: Text('J')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Swift',
-                          avatar: CircleAvatar(child: Text('S')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Objective-C',
-                          avatar: CircleAvatar(child: Text('O')),
-                        ),
-                      ],
+                      onSaved: (value) {
+                  _formData['pace'] = value;
+                },
                       onChanged: _onChanged,
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.minLength(1),
-                        FormBuilderValidators.maxLength(3),
-                      ]),
-                    ),
-                    FormBuilderChoiceChip<String>(
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      min: 0.0,
+                      max: 10.0,
+                      initialValue: 7.0,
+                      divisions: 20,
+                      activeColor: Color.fromARGB(255, 66, 23, 221),
+                      inactiveColor: Color.fromARGB(255, 141, 120, 245),
                       decoration: const InputDecoration(
-                          labelText:
-                              'Ok, if I had to choose one language, it would be:'),
-                      name: 'languages_choice',
-                      initialValue: 'Dart',
-                      options: const [
-                        FormBuilderChipOption(
-                          value: 'Dart',
-                          avatar: CircleAvatar(child: Text('D')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Kotlin',
-                          avatar: CircleAvatar(child: Text('K')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Java',
-                          avatar: CircleAvatar(child: Text('J')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Swift',
-                          avatar: CircleAvatar(child: Text('S')),
-                        ),
-                        FormBuilderChipOption(
-                          value: 'Objective-C',
-                          avatar: CircleAvatar(child: Text('O')),
-                        ),
-                      ],
-                      onChanged: _onChanged,
-                    ),
+                        labelText: 'Velocidade do narrador',
+                      ),
+                    ),                     
                   ],
                 ),
               ),
               Row(
                 children: <Widget>[
                   Expanded(
+
+                    
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState?.saveAndValidate() ?? false) {
-                          debugPrint(_formKey.currentState?.value.toString());
-                        } else {
-                          debugPrint(_formKey.currentState?.value.toString());
-                          debugPrint('validation failed');
-                        }
-                      },
+                      onPressed: _submitForm,
                       child: const Text(
                         'Submit',
                         style: TextStyle(color: Colors.white),
+                        
                       ),
                     ),
                   ),
@@ -522,10 +403,11 @@ class _CompleteFormState extends State<CompleteForm> {
                         'Reset',
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.secondary),
-                      ),
+                          ),
                     ),
                   ),
-                ],
+                ]
+                ,
               ),
             ],
           ),
@@ -534,8 +416,205 @@ class _CompleteFormState extends State<CompleteForm> {
     );
   }
 }
+class NewWidget extends StatelessWidget {
+
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('New Widget')),
+      body: Center(
+              child: CircularProgressIndicator(),
+            ),
+    );
+  }
+}
+class MyWidget extends StatefulWidget {
+  final Map<String, dynamic> formData;
+ const MyWidget({Key? key, required this.formData}) : super(key: key);
+ 
+
+  @override
+  _MyWidgetState createState() => _MyWidgetState();
+}
+
+class _MyWidgetState extends State<MyWidget> {
+  bool _isLoading = true;
+  String _data = '';
+
+  List<Object> chatMessages = [];
+  final FlutterTts tts = FlutterTts();
+   
+  @override
+  void initState() {
+    super.initState();
+
+    _makeApiCall();
+  }
+
+  Future<void> _makeApiCall() async {
+    
+    final prefs = await SharedPreferences.getInstance();
+
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.speech());   
+    var receiveMsg = "";
+    var receiveMsgSpeak = "";
+    var receiveDone = false;
+    List<Object> chatGPTMessages = [];
+    ScrollController scrollController = ScrollController();
+    print(widget.formData['movie_rating'].toString());
+    String systemRequest = "Conte uma histõria para crianças com os personagens ${widget.formData['character'].join(', ')} um tom ${widget.formData['movie_rating'].toString()}. A história deve ter uma duração de ${widget.formData['duration'].toString()} minutos quando contada.";
+    
+
+    String systemRole = "Você é uma cuidadora de crianças";
+    chatGPTMessages.add({"role": "system", "content": systemRole});
+    chatGPTMessages.add({"role": "user", "content": systemRequest});
+ // Duplicar com data e hora atuais adicionadas
+    List<Object> chatMessagesClone = [
+      {"role": "user", "content": DateFormat('É MM mês dd dia aaaa HH hora mm').format(DateTime.now())},
+      ...chatGPTMessages
+    ];
+    print("chatGPTMessages: $chatGPTMessages");
+    Uri url = Uri.parse("https://api.openai.com/v1/chat/completions");
+    Map<String, String> headers = {
+      'Content-type': 'application/json',
+      "Authorization": "Bearer ${dotenv.get("OPEN_AI_API_KEY")}"
+    };
+    String body = json.encode({
+      "frequency_penalty": 0,
+      "max_tokens": 512,
+      "messages": chatGPTMessages,
+      "model": "gpt-3.5-turbo",
+      "presence_penalty": 0,
+      "stream": true,
+      "temperature": 0.7,
+      "top_p": 1
+    });
 
 
+    final request = http.Request('POST', url);
+    request.headers.addAll(headers);
+    request.body = body;
+    request.followRedirects = false;
+
+    final response = await request.send();
+    int statusCode = response.statusCode;
+    if(response.statusCode != 200)
+    {
+      setState(() {
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Ocorreu um erro de comunicação ${response.statusCode}"),
+        ));
+      });
+
+      return;
+    }
+  String _getVoiceName(String type)
+  {
+    return (type == "user" ? prefs.getString("voice_EU") : prefs.getString("voice_robo"))?? "";
+  }
+
+    await for (final message in response.stream.transform(utf8.decoder)) {
+      
+      message.split("\n").forEach((msg) {
+
+        if(!msg.startsWith("data: "))
+        {
+          return;
+        }
+
+        var jsonMsg = msg.replaceFirst(RegExp("^data: "), "");
+
+        if(jsonMsg == "[DONE]")
+        {
+          return;
+        }
+
+        final data = json.decode(jsonMsg);
+        
+        var content = data["choices"][0]["delta"]["content"];
+        if(content == null){
+          return;
+        }
+        receiveMsg += content;
+
+        receiveMsgSpeak += content;
+        
+        // quando ainda não acabou
+        if(!receiveDone)
+        {
+          // Verificação do número mínimo para evitar falar em pequenas quantidades de texto
+          if(receiveMsgSpeak.length > 50)
+          {
+            var stopIndex = receiveMsgSpeak.indexOf(RegExp("、|。|\n"), 50);
+            if(stopIndex > 0)
+            {
+              var speackMsg = receiveMsgSpeak.substring(0, stopIndex);
+              receiveMsgSpeak = receiveMsgSpeak.substring(stopIndex+1, receiveMsgSpeak.length);
+
+              () async {
+                // falar mensagem recebida
+                await tts.setVoice({'name': _getVoiceName("voice_robo"), 'locale': 'pt-BR'});
+                await tts.speak(
+                  speackMsg
+                  ///receiveMsgSpeak
+                );
+              }();
+            }
+          }
+        }
+        receiveDone = true;
+        _isLoading = false;
+        // Definir texto para os últimos dados adicionados
+        dynamic item = chatGPTMessages[chatGPTMessages.length-1];
+        item["content"] = receiveMsg;
+        chatGPTMessages[chatGPTMessages.length-1] = item;
+      });
+      
+    }
+
+    // Adicionar mensagem recebida
+    chatGPTMessages.add({"role": "assistant", "content": ""});
+    _logger.info(response.statusCode);
+    setState(() {
+      _isLoading = false;
+      _data = receiveMsg;
+    });
+receiveDone = true;
+
+    // Fale as mensagens recebidas restantes
+    await tts.setVoice({'name': _getVoiceName("voice_robo"), 'locale': 'pt-BR'});
+    await tts.speak(
+      //receiveMsgSpeak
+      receiveMsg
+    );
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('My Widget'),
+      ),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: 16.0),
+                  Text(_data),
+                ],
+              ),
+            ),
+    );
+  }
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -582,7 +661,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String lastWords = '';
   String systemRole = "Você é uma terapeuta que aplica técnicas de Coaching, constelação sistêmica e Programação Neuro Linguística. Você utiliza a terapia cognitivo comportamental como aporte científico. Aplica técnicas de coaching e PNL como estratégias alternativas no trabalho de desenvolvimento de cada indivíduo. Você domina os conteúdos de Coaching para aplicar na sua vida e carreira ou para desenvolver em programas de maximização de performance humana. Você é capaz de capacitar o cliente a tomar decisões, desenvolver habilidades e alcançar seus objetivos de forma independente. Você se comunica claramente e efetivamente com o cliente, usando técnicas de linguagem positiva e construtiva. Você se coloca no lugar do cliente e entender suas emoções e pontos de vista. Você responde com no máximo 100 palavras. Se necessário mais detalhes será requisitado";
 
-  
   List<Object> chatMessages = [];
   final FlutterTts tts = FlutterTts();
   late SharedPreferences prefs;
@@ -617,8 +695,8 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       // Configuração de velocidade de fala
-      await tts.setPitch(0.9);
-      await tts.setSpeechRate(1.4);
+      await tts.setPitch(1.9);
+      await tts.setSpeechRate(2.7);
     });
 
     // Abra a tela de configurações
@@ -743,14 +821,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
 
+
+
+    chatMessages.add({"role": "system", "content": systemRole});
+
     // Duplicar com data e hora atuais adicionadas
     List<Object> chatMessagesClone = [
       {"role": "user", "content": DateFormat('É MM mês dd dia aaaa HH hora mm').format(DateTime.now())},
       ...chatMessages
     ];
-
-    chatMessages.add({"role": "system", "content": systemRole});
-
     Uri url = Uri.parse("https://api.openai.com/v1/chat/completions");
     Map<String, String> headers = {
       'Content-type': 'application/json',
@@ -827,6 +906,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
 
         receiveMsg += content;
+        print("receiveMsg $receiveMsg");
 
         receiveMsgSpeak += content;
         
@@ -990,7 +1070,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: _speak,
                         icon: const Icon(Icons.mic),
                       ),
+                                            
                     ),
+
                     )
                 ),
                 CircleAvatar(
@@ -1117,20 +1199,7 @@ class SpeechDialogState extends State<SpeechDialog> {
                               ),),
             ),
           ),
-          CircleAvatar(
-            radius: 20 + soundLevel,
-            backgroundColor: lastStatus == "listening" ? const Color.fromARGB(255, 0, 149, 255) : const Color.fromARGB(255, 128, 128, 128),
-            child:
-              IconButton(
-                onPressed: (){
 
-                  Navigator.of(context).pop(lastWords);
-                },
-                icon: const Icon(Icons.mic),
-                iconSize: 18 + soundLevel,
-                color:const Color.fromARGB(255, 255, 255, 255),
-              ),
-          ),
         ],
       ),
     );

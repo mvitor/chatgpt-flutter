@@ -49,6 +49,7 @@ dependencies:
   shared_preferences: ^2.0.20
   flutter_native_splash: ^2.2.19
   flutter_launcher_icons: ^0.13.0
+  firebase_core: ^2.10.0
 
 
 dev_dependencies:
