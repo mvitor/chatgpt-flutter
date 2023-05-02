@@ -19,8 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-
-
 final Logger _logger = Logger('MyApp');
 
 
@@ -1175,7 +1173,7 @@ class SpeechDialogState extends State<SpeechDialog> {
         localeId: "pt-BR"
         );
       } else {
-        _logger.info("The user has denied the use of speech recognition.");
+        _logger.info("The user has denied the use of speech recognition!");
       }
       
     });
